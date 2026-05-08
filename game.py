@@ -156,6 +156,7 @@ dynamic_obstacles = []
 # ----------------------------
 steps = 0
 penalties = 0
+lives = 3
 
 # ----------------------------
 # 🟢 СКОРОСТЬ
@@ -271,8 +272,8 @@ def draw_all():
     score_drawer.goto(0, -HEIGHT//2 + 40)
     score = steps - penalties
     score_drawer.clear()
-    score_drawer.write(f"Steps: {steps} | Penalties: {penalties} | Score: {score}",
-                       align="center", font=("Arial", 16, "bold"))
+    score_drawer.write(f"Lives: {lives} | Steps: {steps} | Penalties: {penalties} | Score: {score}",
+                   align="center", font=("Arial", 16, "bold"))
     
     screen.update()
 
@@ -288,6 +289,8 @@ def rect_collision(hero_x, hero_y, rect_x, rect_y, rect_w, rect_h, hero_radius=1
 def check_collision():
     """Проверяет столкновения"""
     global penalties
+    "Cчетчик жизней"
+    global lives
     for ox, oy, (w, h) in impassable_obstacles:
         if rect_collision(hero.xcor(), hero.ycor(), ox, oy, w, h, hero_radius=15):
             penalties += 20
@@ -297,10 +300,17 @@ def check_collision():
     
     for obs in dynamic_obstacles:
         x, y, w, h, is_falling, speed, final_y = obs
+
         if rect_collision(hero.xcor(), hero.ycor(), x, y, w, h, hero_radius=15):
-            return "game_over"
-    
-    return "ok"
+            lives -= 1
+            print(f"Жизней осталось: {lives}")
+
+            hero.goto(hero.xcor() - 50, hero.ycor() - 50)
+
+            if lives <= 0:
+                return "game_over"
+
+            return "ok"
 
 # ----------------------------
 # 🟢 УПРАВЛЕНИЕ (БЕЗ ЧЕКПОИНТОВ!)
