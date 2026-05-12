@@ -1,4 +1,5 @@
 import turtle
+import pygame.mixer
 import random
 import time
 import hashlib
@@ -182,6 +183,17 @@ def draw_initial_leaderboard():
         except:
             pass
     draw_leaderboard_on_screen(records, y_pos=HEIGHT//2 - 20)
+def play_reach_sound():
+    if not SOUND_ENABLED:
+        return
+    try:
+        import math, array
+        # Генерируем сигнал 880 Гц, 150 мс
+        sr = 44100
+        buf = array.array('h', [int(32767 * 0.3 * math.sin(2 * math.pi * 880 * i / sr)) for i in range(int(sr * 0.15))])
+        pygame.mixer.Sound(buffer=buf.tobytes()).play()
+    except Exception:
+        pass    
 
 # ----------------------------
 # 🟢 ИНИЦИАЛИЗАЦИЯ ИГРЫ
@@ -197,7 +209,12 @@ screen.setup(WIDTH, HEIGHT)
 screen.title(f"Red Riding Hood Mission - {student_name}")
 screen.bgcolor("lightblue")
 screen.tracer(0)
-
+SOUND_ENABLED = False
+try:
+    pygame.mixer.init()
+    SOUND_ENABLED = True
+except Exception:
+    pass
 # ----------------------------
 # 🟢 ГЕРОЙ
 # ----------------------------
@@ -437,6 +454,7 @@ screen.onkey(reset_session, "r")
 # ----------------------------
 draw_field_markers()
 draw_initial_leaderboard()
+
 screen.update()
 
 
@@ -483,6 +501,7 @@ while True:
         print("🎯 Reached B! RETURN TO A!")
         print(f"🟢 Теперь будут появляться препятствия!")
         going_forward = False
+        play_reach_sound()
         
         log.append({
             "event": "reached_goal_B",
