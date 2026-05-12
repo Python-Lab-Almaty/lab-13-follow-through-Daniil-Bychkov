@@ -225,6 +225,7 @@ lives = 3
 # ----------------------------
 vx = 5
 vy = 5
+boost = False
 
 # ----------------------------
 # 🟢 РЕЖИМ
@@ -379,61 +380,49 @@ def check_collision():
 # ----------------------------
 def up():
     global steps
-    hero.sety(hero.ycor() + vy)
+    speed = vy * 5 if boost else vy
+    hero.sety(hero.ycor() + speed)
     steps += 1
-    
-    log.append({
-        "event": "move",
-        "direction": "up",
-        "x": hero.xcor(),
-        "y": hero.ycor(),
-        "time": time.time()
-    })
+    log.append({"event": "move", "direction": "up", "x": hero.xcor(), "y": hero.ycor(), "time": time.time()})
 
 def down():
     global steps
-    hero.sety(hero.ycor() - vy)
+    speed = vy * 5 if boost else vy
+    hero.sety(hero.ycor() - speed)
     steps += 1
-    
-    log.append({
-        "event": "move",
-        "direction": "down",
-        "x": hero.xcor(),
-        "y": hero.ycor(),
-        "time": time.time()
-    })
+    log.append({"event": "move", "direction": "down", "x": hero.xcor(), "y": hero.ycor(), "time": time.time()})
 
 def left():
     global steps
-    hero.setx(hero.xcor() - vx)
+    speed = vx * 5 if boost else vx
+    hero.setx(hero.xcor() - speed)
     steps += 1
-    
-    log.append({
-        "event": "move",
-        "direction": "left",
-        "x": hero.xcor(),
-        "y": hero.ycor(),
-        "time": time.time()
-    })
+    log.append({"event": "move", "direction": "left", "x": hero.xcor(), "y": hero.ycor(), "time": time.time()})
 
 def right():
     global steps
-    hero.setx(hero.xcor() + vx)
+    speed = vx * 5 if boost else vx
+    hero.setx(hero.xcor() + speed)
     steps += 1
-    
-    log.append({
-        "event": "move",
-        "direction": "right",
-        "x": hero.xcor(),
-        "y": hero.ycor(),
-        "time": time.time()
-    })
+    log.append({"event": "move", "direction": "right", "x": hero.xcor(), "y": hero.ycor(), "time": time.time()})
 
 def reset_session():
     clear_session(student_name)
     print("🔄 Сессия сброшена. Перезапустите игру.")
 
+def press_shift():
+    global boost
+    boost = True
+
+def release_shift():
+    global boost
+    boost = False
+
 screen.listen()
+screen.onkey(press_shift, "Shift_L")
+screen.onkey(press_shift, "Shift_R")
+screen.onkeyrelease(release_shift, "Shift_L")
+screen.onkeyrelease(release_shift, "Shift_R")
 screen.onkey(up, "Up")
 screen.onkey(down, "Down")
 screen.onkey(left, "Left")
@@ -443,11 +432,11 @@ screen.onkey(down, "s")
 screen.onkey(left, "a")
 screen.onkey(right, "d")
 screen.onkey(reset_session, "r")
-
 # ----------------------------
 # 🟢 ОСНОВНОЙ ЦИКЛ
 # ----------------------------
 draw_field_markers()
+draw_initial_leaderboard()
 screen.update()
 
 
