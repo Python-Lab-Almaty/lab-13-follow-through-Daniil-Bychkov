@@ -12,6 +12,7 @@ WIDTH, HEIGHT = 1400, 900
 
 # 🟢 ИНИЦИАЛИЗАЦИЯ ЛОГА
 log = []
+LEADERBOARD_FILE = "leaderboard.json"
 
 # ----------------------------
 # 🟢 ПОЛУЧЕНИЕ ИМЕНИ СТУДЕНТА
@@ -120,6 +121,67 @@ def save_log(reason="end"):
         print(f"💾 Лог сохранён: {filename} ({len(log)} записей)")
     except Exception as e:
         print(f"❌ Ошибка сохранения лога: {e}")
+
+def draw_leaderboard_on_screen(records, y_pos):
+    """Рисует таблицу рекордов в указанной позиции"""
+    if not hasattr(draw_leaderboard_on_screen, 'lb_t'):
+        draw_leaderboard_on_screen.lb_t = turtle.Turtle()
+        draw_leaderboard_on_screen.lb_t.hideturtle()
+        draw_leaderboard_on_screen.lb_t.penup()
+        draw_leaderboard_on_screen.lb_t.speed(0)
+
+    t = draw_leaderboard_on_screen.lb_t
+    t.clear()
+    t.goto(0, y_pos)
+    t.color("navy")
+    t.write("🏆 TOP-3 LEADERBOARD", align="center", font=("Arial", 16, "bold"))
+    t.sety(t.ycor() - 25)
+
+    for i, r in enumerate(records[:3], 1):
+        t.write(f"{i}. {r['name'].title()} | Score: {r['score']} | Time: {r['time']}s",
+                align="center", font=("Arial", 13, "normal"))
+        t.sety(t.ycor() - 22)
+    screen.update()
+
+def update_leaderboard(name, score, total_time):
+    """Сохраняет в JSON, выводит в консоль и обновляет экран"""
+    records = []
+    if os.path.exists(LEADERBOARD_FILE):
+        try:
+            with open(LEADERBOARD_FILE, 'r', encoding='utf-8') as f:
+                records = json.load(f)
+        except:
+            records = []
+
+    # Добавляем результат (без дублей-багов)
+    records.append({'name': name, 'score': score, 'time': round(total_time, 2)})
+    
+    # Сортируем по очкам (убывание) и оставляем топ-3
+    records.sort(key=lambda x: x['score'], reverse=True)
+    top3 = records[:3]
+
+    # Сохраняем в файл
+    with open(LEADERBOARD_FILE, 'w', encoding='utf-8') as f:
+        json.dump(top3, f, indent=2, ensure_ascii=False)
+
+    # Вывод в консоль
+    print("\n🏆 TOP-3 LEADERBOARD:")
+    for i, rec in enumerate(top3, 1):
+        print(f"  {i}. {rec['name']} | Score: {rec['score']} | Time: {rec['time']}s")
+
+    # Рисуем на экране (поднято выше маркеров)
+    draw_leaderboard_on_screen(top3, y_pos=HEIGHT//2 - 20)
+
+def draw_initial_leaderboard():
+    """Показывает текущий топ-3 при запуске игры"""
+    records = []
+    if os.path.exists(LEADERBOARD_FILE):
+        try:
+            with open(LEADERBOARD_FILE, 'r', encoding='utf-8') as f:
+                records = json.load(f)
+        except:
+            pass
+    draw_leaderboard_on_screen(records, y_pos=HEIGHT//2 - 20)
 
 # ----------------------------
 # 🟢 ИНИЦИАЛИЗАЦИЯ ИГРЫ
@@ -388,6 +450,7 @@ screen.onkey(reset_session, "r")
 draw_field_markers()
 screen.update()
 
+
 obstacles_spawned_count = 0
 start_time = time.time()
 
@@ -465,6 +528,8 @@ while True:
                 'steps': steps,
                 'date': time.strftime("%Y-%m-%d %H:%M:%S")
             }, f, indent=2)
+
+        update_leaderboard(student_name, final_score, total_time)
         
         save_log("mission_complete")  # ✅ ОДИН РАЗ В КОНЦЕ!
         break
